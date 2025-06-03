@@ -13,8 +13,8 @@ import os
 import subprocess
 import sys
 import json
-import shutil
 from datetime import datetime
+import configparser
 
 #endregion
 
@@ -27,6 +27,12 @@ build_path:                     str = "path to where builds are stored"
 export_preset:                  str = "MyPreset"
 should_update_build_version:    bool = False
 
+project_name:                   str = "MyGame"
+
+build_extension:                str = "exe"
+
+generated_build_path:           str = ""
+
 settings_file_name:             str = "settings.json"
 
 build_config:                   str = "--export-debug"
@@ -37,14 +43,16 @@ build_types:                    dict = {
 }
 
 valid_args:                     list = [
-                                "onlyupate",
-                                "enginepath",
-                                "projectpath",
-                                "buildpath",
-                                "versionconfig",
-                                "updateversion",
-                                "makebuild",
-                                "savesettings"
+                                    "projectname",
+                                    "buildextension"
+                                    "onlyupate",
+                                    "enginepath",
+                                    "projectpath",
+                                    "buildpath",
+                                    "versionconfig",
+                                    "updateversion",
+                                    "makebuild",
+                                    "savesettings"
                                 ]
 
 #endregion
@@ -70,6 +78,8 @@ def read_settings_json():
     settings = json.load(file)
     file.close()
 
+    set_project_name(settings["projectname"])
+    set_build_extension(settings["buildextension"])
     set_engine_path(settings["enginepath"])
     set_project_path(settings["projectpath"])
     set_version_config(settings["versionpath"])
@@ -91,6 +101,8 @@ def write_settings_json():
     print(">>>>> Writing settings to JSON")
 
     new_settings = {
+        "projectname": project_name,
+        "buildextension": build_extension,
         "enginepath": engine_path,
         "projectpath": project_path,
         "versionpath": version_path,
@@ -104,6 +116,10 @@ def write_settings_json():
     file = open(settings_file_name, "w")
     file.write(json_data)
     file.close()
+
+def generate_build_path():
+    global generated_build_path
+    generated_build_path = os.path.join(build_path, project_name, build_extension)
 
 def helpme():
     pass
@@ -141,8 +157,35 @@ def set_export_preset(preset: str):
     global export_preset
     export_preset = preset
 
+def set_project_name(name: str):
+    global project_name
+    project_name = name
+
+def set_build_extension(ext: str):
+    global build_extension
+    build_extension = ext
+
 def update_version():
-    pass
+
+    print("")
+    print(">>>>> Updating version config file...")
+
+    build_date = datetime.today().strftime('%m%d%y')
+
+    if not os.path.exists(version_path):
+        print("!! WARNING !! Could not find config file! Path: " + version_path)
+        exit_tool(1)
+
+    parser = configparser.ConfigParser()
+    parser.read(version_path)
+    parser.set("version", "build_date", build_date)
+    with open(version_path, "w") as configfile:
+        parser.write(configfile)
+
+def test_update():
+    global version_path
+    version_path = "version.cfg"
+    update_version()
 
 def make_build():
 
@@ -156,7 +199,7 @@ def make_build():
         engine_path,
         f"--path {project_path}",
         f"--{build_config} {export_preset}",
-        build_path
+        generated_build_path
     ]
 
     print("")
@@ -206,6 +249,12 @@ def process_args() -> bool:
     print("")
     print(">>>>> Processing command line arguments")
 
+    if "projectname" in sorted_args:
+        set_project_name(sorted_args["projectname"])
+
+    if "buildextension" in sorted_args:
+        set_build_extension(sorted_args["buildextension"])
+
     if "enginepath" in sorted_args:
         set_engine_path(sorted_args["enginepath"])
 
@@ -252,6 +301,7 @@ def start_tool():
     read_settings_json()
     do_build = process_args()
     if do_build:
+        generate_build_path()
         make_build()
     else:
         exit(0)
@@ -259,7 +309,7 @@ def start_tool():
 
 #region --- Main ---
 def main():
-    pass
+    start_tool()
 #endregion
 
 if __name__ == "__main__":
