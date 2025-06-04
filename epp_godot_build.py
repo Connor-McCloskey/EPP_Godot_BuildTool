@@ -35,17 +35,17 @@ generated_build_path:           str = ""
 
 settings_file_name:             str = "settings.json"
 
-build_config:                   str = "--export-debug"
+build_config:                   str = "export-debug"
 
 build_types:                    dict = {
-    "release":                  "--export-release",
-    "debug":                    "--export-debug"
+    "release":                  "export-release",
+    "debug":                    "export-debug"
 }
 
 valid_args:                     list = [
                                     "projectname",
-                                    "buildextension"
-                                    "onlyupate",
+                                    "buildextension",
+                                    "onlyupdate",
                                     "enginepath",
                                     "projectpath",
                                     "buildpath",
@@ -68,7 +68,7 @@ def exit_tool(code: int):
 def read_settings_json():
 
     print("")
-    print(">>>>> Writing settings to JSON")
+    print(">>>>> Reading settings from JSON")
 
     if not os.path.exists(settings_file_name):
         print(">>>>> No settings file found, using script defaults")
@@ -88,6 +88,10 @@ def read_settings_json():
     set_do_version_update(settings["do_update"])
 
 def display_settings():
+    print("")
+    print("---- Run Settings ---")
+    print(">> Project name:        ", project_name)
+    print(">> Extension:           ", build_extension)
     print(">> Engine path:         ", engine_path)
     print(">> Project path:        ", project_path)
     print(">> Version config path: ", version_path)
@@ -111,7 +115,7 @@ def write_settings_json():
         "do_update": should_update_build_version
     }
 
-    json_data = json.dumps(new_settings)
+    json_data = json.dumps(new_settings,indent=4)
 
     file = open(settings_file_name, "w")
     file.write(json_data)
@@ -119,7 +123,8 @@ def write_settings_json():
 
 def generate_build_path():
     global generated_build_path
-    generated_build_path = os.path.join(build_path, project_name, build_extension)
+    build = project_name + "." + build_extension
+    generated_build_path = os.path.join(build_path, build)
 
 def helpme():
     pass
@@ -195,15 +200,11 @@ def make_build():
     if should_update_build_version:
         update_version()
 
-    build_command = [
-        engine_path,
-        f"--path {project_path}",
-        f"--{build_config} {export_preset}",
-        generated_build_path
-    ]
+    build_command = engine_path + " " + "--headless" + " " + f"--path {project_path}" + " " + f"--{build_config} \"{export_preset}\"" + " " + generated_build_path
 
     print("")
     print(">>>>> Packaging...")
+    print(">> Build command: ", build_command)
     print("")
 
     try:
@@ -231,7 +232,7 @@ def process_args() -> bool:
     while index < num_args - 1:
         key = sys.argv[index].lower()
         if key not in valid_args:
-            print("!!! WARNING !!! Invalid argument! Use 'helpme' for a list of all valid commands!")
+            print("!!! WARNING !!! Invalid argument! Use 'helpme' for a list of all valid commands! Invalid command: ", key)
             exit_tool(1)
         if key == "helpme":
             helpme()
@@ -304,12 +305,14 @@ def start_tool():
         generate_build_path()
         make_build()
     else:
-        exit(0)
+        exit_tool(0)
 #endregion
 
 #region --- Main ---
+
 def main():
     start_tool()
+
 #endregion
 
 if __name__ == "__main__":
