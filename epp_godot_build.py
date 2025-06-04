@@ -200,7 +200,8 @@ def make_build():
     if should_update_build_version:
         update_version()
 
-    build_command = engine_path + " " + "--headless" + " " + f"--path {project_path}" + " " + f"--{build_config} \"{export_preset}\"" + " " + generated_build_path
+    # build_command = engine_path + " " + "--headless" + " " + f"--path {project_path}" + " " + f"--{build_config} \"{export_preset}\"" + " " + generated_build_path
+    build_command = engine_path + " " + f"--path {project_path}" + " " + f"--{build_config} \"{export_preset}\"" + " " + generated_build_path
 
     print("")
     print(">>>>> Packaging...")

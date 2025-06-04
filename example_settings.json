@@ -1,0 +1,10 @@
+{
+    "projectname": "MyProject",
+    "buildextension": "exe",
+    "enginepath": "path\\to\\engine",
+    "projectpath": "path\\to\\project",
+    "versionpath": "path\\to\\configfile",
+    "buildpath": "path\\to\\store\\build",
+    "exportpreset": "My Export Preset",
+    "do_update": false
+}
