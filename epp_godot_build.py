@@ -175,7 +175,7 @@ def update_version():
     print("")
     print(">>>>> Updating version config file...")
 
-    build_date = datetime.today().strftime('%m%d%y')
+    build_date = "\"" + datetime.today().strftime('%m.%d.%y') + "\""
 
     if not os.path.exists(version_path):
         print("!! WARNING !! Could not find config file! Path: " + version_path)
